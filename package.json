@@ -6,7 +6,7 @@
     ["github:heyglen/mp-contextlib/contextlib.py", null],
     ["github:heyglen/mp-statistics/statistics.py", null],
     ["datetime", null],
-    ["uaiohttpclient", null],
+    ["uaiohttpclient", null]
   ],
   "version": "0.1.0"
 }
