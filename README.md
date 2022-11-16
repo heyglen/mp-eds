@@ -22,7 +22,10 @@ async def main():
 asyncio.run(main())
 ```
 
+Sample output:
+
 ```
+$ python example.py
 2022.11.17 23:00  24 øre
 2022.11.17 22:00  30 øre
 2022.11.17 21:00  28 øre
