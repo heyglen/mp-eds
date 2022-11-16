@@ -3,7 +3,6 @@
     ["eds.py", "github:heyglen/mp-eds/eds.py"]
   ],
   "deps": [
-    ["github:heyglen/mp-contextlib/contextlib.py", null],
     ["github:heyglen/mp-statistics/statistics.py", null],
     ["datetime", null],
     ["uaiohttpclient", null]

@@ -1,4 +1,3 @@
-import contextlib
 import datetime
 import statistics
 
@@ -44,29 +43,29 @@ class PriceArea:
 class Eds:
     version = "1.0.0"
 
-    def __init__(self, session, price_area=PriceArea.east_of_great_belt):
+    def __init__(self, price_area=PriceArea.east_of_great_belt):
         self._price_area = price_area
         self._session = session
 
     async def list_(self):
-        async with self._session.get(
-            "https://api.energidataservice.dk/dataset/Elspotprices",
-        ) as response:
-            data = await response.json()
+        response = await aiohttp.get(
+            "https://api.energidataservice.dk/dataset/Elspotprices"
+        )
+        data = await response.json()
 
-            periods = list()
-            for record in data["records"]:
-                price_area = record["PriceArea"]
-                if price_area != self._price_area:
-                    continue
-                timestamp = datetime.datetime.strptime(
-                    record["HourDK"], "%Y-%m-%dT%H:%M:%S"
-                )
-                period = Period(
-                    when=timestamp,
-                    price=round(record["SpotPriceDKK"] / 10),
-                )
-                periods.append(period)
+        periods = list()
+        for record in data["records"]:
+            price_area = record["PriceArea"]
+            if price_area != self._price_area:
+                continue
+            timestamp = datetime.datetime.strptime(
+                record["HourDK"], "%Y-%m-%dT%H:%M:%S"
+            )
+            period = Period(
+                when=timestamp,
+                price=round(record["SpotPriceDKK"] / 10),
+            )
+            periods.append(period)
 
         cheap, expensive = statistics.quantiles([p.price for p in periods], n=3)
 
@@ -79,9 +78,3 @@ class Eds:
                 period.relative_price = RelativeCost.expensive
 
         return periods
-
-
-@contextlib.asynccontextmanager
-async def Session(price_area=PriceArea.east_of_great_belt):
-    async with aiohttp.ClientSession() as session:
-        yield Eds(session=session, price_area=price_area)
