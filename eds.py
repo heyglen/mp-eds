@@ -45,7 +45,6 @@ class Eds:
 
     def __init__(self, price_area=PriceArea.east_of_great_belt):
         self._price_area = price_area
-        self._session = session
 
     async def list_(self):
         response = await aiohttp.get(
