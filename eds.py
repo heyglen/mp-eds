@@ -43,8 +43,8 @@ class PriceArea:
 async def list_(price_area=PriceArea.east_of_great_belt):
     url = "http://api.energidataservice.dk/dataset/Elspotprices"
     response = await aiohttp.request("GET", url)
-    text = await response.read()
-    print(type(text))
+    body_bytes = await response.read()
+    text = body_bytes.decode("utf-8")
     data = json.loads(text)
 
     periods = list()
