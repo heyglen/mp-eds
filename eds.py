@@ -40,8 +40,14 @@ class PriceArea:
     east_of_great_belt = "DK2"
 
 
-async def list_(price_area=PriceArea.east_of_great_belt):
-    url = "http://api.energidataservice.dk/dataset/Elspotprices"
+async def list_(price_area=PriceArea.east_of_great_belt, limit=24):
+    columns = "columns=HourDK,SpotPriceDKK"
+    filter_ = "filter={%22PriceArea%22:[%22" + price_area + "%22]}"
+    limit_param = "limit=" + limit
+
+    params = "&".join([columns, filter_, limit_param])
+    url = "http://api.energidataservice.dk/dataset/Elspotprices?" + params
+
     response = await aiohttp.request("GET", url)
     body_bytes = await response.read()
     text = body_bytes.decode("utf-8")
@@ -49,9 +55,6 @@ async def list_(price_area=PriceArea.east_of_great_belt):
 
     periods = list()
     for record in data["records"]:
-        price_area = record["PriceArea"]
-        if price_area != cls._price_area:
-            continue
         timestamp = datetime.datetime.strptime(record["HourDK"], "%Y-%m-%dT%H:%M:%S")
         period = Period(
             when=timestamp,
