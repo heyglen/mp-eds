@@ -3,8 +3,7 @@ import json
 import statistics
 
 import uaiohttpclient as aiohttp
-
-LOG_DATE_FORMAT = "%Y.%m.%d %H:%M:%S"
+import uasyncio as asyncio
 
 
 class RelativeCost:
@@ -41,40 +40,33 @@ class PriceArea:
     east_of_great_belt = "DK2"
 
 
-class Eds:
-    version = "1.0.0"
+async def list_(price_area=PriceArea.east_of_great_belt):
+    url = "http://api.energidataservice.dk/dataset/Elspotprices"
+    response = await aiohttp.request("GET", url)
+    text = await response.read()
+    print(type(text))
+    data = json.loads(text)
 
-    def __init__(self, price_area=PriceArea.east_of_great_belt):
-        self._price_area = price_area
+    periods = list()
+    for record in data["records"]:
+        price_area = record["PriceArea"]
+        if price_area != cls._price_area:
+            continue
+        timestamp = datetime.datetime.strptime(record["HourDK"], "%Y-%m-%dT%H:%M:%S")
+        period = Period(
+            when=timestamp,
+            price=round(record["SpotPriceDKK"] / 10),
+        )
+        periods.append(period)
 
-    async def list_(self):
-        url = "http://api.energidataservice.dk/dataset/Elspotprices"
-        response = await aiohttp.request("GET", url)
-        text = await response.read()
-        data = json.loads(text)
+    cheap, expensive = statistics.quantiles([p.price for p in periods], n=3)
 
-        periods = list()
-        for record in data["records"]:
-            price_area = record["PriceArea"]
-            if price_area != self._price_area:
-                continue
-            timestamp = datetime.datetime.strptime(
-                record["HourDK"], "%Y-%m-%dT%H:%M:%S"
-            )
-            period = Period(
-                when=timestamp,
-                price=round(record["SpotPriceDKK"] / 10),
-            )
-            periods.append(period)
+    for period in periods:
+        if period.price < cheap:
+            period.relative_price = RelativeCost.cheap
+        elif cheap <= period.price < expensive:
+            period.relative_price = RelativeCost.mid_priced
+        elif expensive <= period.price:
+            period.relative_price = RelativeCost.expensive
 
-        cheap, expensive = statistics.quantiles([p.price for p in periods], n=3)
-
-        for period in periods:
-            if period.price < cheap:
-                period.relative_price = RelativeCost.cheap
-            elif cheap <= period.price < expensive:
-                period.relative_price = RelativeCost.mid_priced
-            elif expensive <= period.price:
-                period.relative_price = RelativeCost.expensive
-
-        return periods
+    return periods
