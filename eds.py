@@ -1,9 +1,7 @@
-import datetime
 import json
 import statistics
 
 import uaiohttpclient as aiohttp
-import uasyncio as asyncio
 
 
 class RelativeCost:
@@ -31,8 +29,7 @@ class Period:
         self.relative_price = relative_price
 
     def __str__(self):
-        when = self.when.strftime("%Y.%m.%d %H:%M")
-        return f"{when} {self.price:3} {self.currency_unit}"
+        return f"{self.when} {self.price:3} {self.currency_unit}"
 
 
 class PriceArea:
@@ -43,10 +40,10 @@ class PriceArea:
 async def list_(price_area=PriceArea.east_of_great_belt, limit=24):
     columns = "columns=HourDK,SpotPriceDKK"
     filter_ = "filter={%22PriceArea%22:[%22" + price_area + "%22]}"
-    limit_param = "limit=" + limit
+    limit_param = f"limit={limit}"
 
     params = "&".join([columns, filter_, limit_param])
-    url = "http://api.energidataservice.dk/dataset/Elspotprices?" + params
+    url = f"http://api.energidataservice.dk/dataset/Elspotprices?{params}"
 
     response = await aiohttp.request("GET", url)
     body_bytes = await response.read()
@@ -55,9 +52,8 @@ async def list_(price_area=PriceArea.east_of_great_belt, limit=24):
 
     periods = list()
     for record in data["records"]:
-        timestamp = datetime.datetime.strptime(record["HourDK"], "%Y-%m-%dT%H:%M:%S")
         period = Period(
-            when=timestamp,
+            when=record["HourDK"],
             price=round(record["SpotPriceDKK"] / 10),
         )
         periods.append(period)
