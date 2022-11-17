@@ -48,7 +48,7 @@ class Eds:
         self._price_area = price_area
 
     async def list_(self):
-        url = "https://api.energidataservice.dk/dataset/Elspotprices"
+        url = "http://api.energidataservice.dk/dataset/Elspotprices"
         response = await aiohttp.request("GET", url)
         text = await response.read()
         data = json.loads(text)
